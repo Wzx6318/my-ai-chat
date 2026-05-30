@@ -1,7 +1,7 @@
 {
   "name": "my-ai-chat",
   "short_name": "AI Chat",
-  "description": "AI网页聊天应用",
+  "description": "一款简洁好用的网页AI聊天助手，支持在线对话交流",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
