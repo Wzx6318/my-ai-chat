@@ -1,14 +1,20 @@
 {
-  "name": "AI 聊天",
-  "short_name": "聊天",
-  "start_url": ".",
+  "name": "my-ai-chat",
+  "short_name": "AI Chat",
+  "description": "AI网页聊天应用",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#EDEDED",
-  "theme_color": "#07C160",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
   "icons": [
     {
-      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAilJREFUWEftlj1rFEEUhp93vQ9BxEKxEgu1sLW2ENFCsBQsbPwBNhZiEUgTxEoLEb0/YC2IhaU2aiOiKIqlIEhAIbnP25xlcsfZmZ3N7uyKc2CAmWfveeY5c+6cOw7/JQaYX3wEuA4AfAe2gSVgEvgNPAXeA1szCVDNAbBd4G4VDHeB54EQ7taIBfA6o6q5CGwBt0oDLwDHY24+AR4Av0sRR+wbQbdp8RR4UBB+ANxK80Drmf5d4BGwX0Y8Fh5UQc8vjJ8Cl/Ic+AXcKlP6yu9wBBgDJoAZYAVYLZIDhRFVmBOqOm0DeBo48yWClWRWxShtEhdABTAuVoBlYHnE3EO+At7HUhFxJSLSOfAp4Kpi7LJVoP/eCbSpCpzKUNP3SlavAjnnwgHQmgqAFS+io/V7xDYV45I4B06FeZgWgKxTcfkI3E/laox2CpwqEoDY8xlwb/Ze/WmErQKniQTAbHVrV9Va2IK2uHf5q2PTjAqvAZNpACOoWiWomWtBPgH+OKXl7fpH4Myo4xUIsAMct1T83pDrPR4T+4QqGFNBDaCvJ1j73e0V/r97cA48rVJFRI/oTQOfdM+BRqH2eF1ugWMrFmQDEHt3AXjW3xcRR4E14EWsl1WBrBzIqpcFpLra3+EjqpE1qv0es94EUqwfW55v6LbC/Y9hYKb7TPcHMHZfqayqE+6ArIh9AagN2x6rArsgLWpDqk5sVIhYp4iJwE+7VjrNMy0FSQAAAABJRU5ErkJggg==",
-      "sizes": "32x32",
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
       "type": "image/png"
     }
   ]
