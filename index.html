@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AI 聊天</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="AI聊天">
+    <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAilJREFUWEftlj1rFEEUhp93vQ9BxEKxEgu1sLW2ENFCsBQsbPwBNhZiEUgTxEoLEb0/YC2IhaU2aiOiKIqlIEhAIbnP25xlcsfZmZ3N7uyKc2CAmWfveeY5c+6cOw7/JQaYX3wEuA4AfAe2gSVgEvgNPAXeA1szCVDNAbBd4G4VDHeB54EQ7taIBfA6o6q5CGwBt0oDLwDHY24+AR4Av0sRR+wbQbdp8RR4UBB+ANxK80Drmf5d4BGwX0Y8Fh5UQc8vjJ8Cl/Ic+AXcKlP6yu9wBBgDJoAZYAVYLZIDhRFVmBOqOm0DeBo48yWClWRWxShtEhdABTAuVoBlYHnE3EO+At7HUhFxJSLSOfAp4Kpi7LJVoP/eCbSpCpzKUNP3SlavAjnnwgHQmgqAFS+io/V7xDYV45I4B06FeZgWgKxTcfkI3E/laox2CpwqEoDY8xlwb/Ze/WmErQKniQTAbHVrV9Va2IK2uHf5q2PTjAqvAZNpACOoWiWomWtBPgH+OKXl7fpH4Myo4xUIsAMct1T83pDrPR4T+4QqGFNBDaCvJ1j73e0V/r97cA48rVJFRI/oTQOfdM+BRqH2eF1ugWMrFmQDEHt3AXjW3xcRR4E14EWsl1WBrBzIqpcFpLra3+EjqpE1qv0es94EUqwfW55v6LbC/Y9hYKb7TPcHMHZfqayqE+6ArIh9AagN2x6rArsgLWpDqk5sVIhYp4iJwE+7VjrNMy0FSQAAAABJRU5ErkJggg==">
+    <meta name="theme-color" content="#07C160">
+    <style>
+        :root {
+            --wechat-green: #07C160;
+            --wechat-dark-green: #06AD56;
+            --wechat-bg: #EDEDED;
+            --wechat-white: #FFFFFF;
+            --wechat-dark: #191919;
+            --wechat-gray: #888888;
+            --wechat-light-gray: #F5F5F5;
+            --wechat-border: #E0E0E0;
+            --bubble-green: #95EC69;
+            --danger: #FF3B30;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            background: #1a1a1a; display:flex; justify-content:center; align-items:center;
+            min-height:100vh; -webkit-tap-highlight-color:transparent; -webkit-font-smoothing:antialiased;
+            user-select:none; -webkit-user-select:none;
+        }
+        .phone-frame {
+            width:430px; max-width:100vw; height:92vh; max-height:900px;
+            background: var(--wechat-bg); border-radius:24px; overflow:hidden;
+            display:flex; flex-direction:column; position:relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px #333;
+        }
+        @media (max-width:440px) {
+            .phone-frame { width:100vw; height:100vh; max-height:100vh; border-radius:0; box-shadow:none; }
+        }
+        .nav-header {
+            background:var(--wechat-bg); padding:10px 16px 14px; display:flex;
+            justify-content:space-between; align-items:center; flex-shrink:0; z-index:10;
+            border-bottom:0.5px solid var(--wechat-border); min-height:60px;
+        }
+        .nav-title { font-size:18px; font-weight:700; color:var(--wechat-dark); }
+        .nav-back { width:36px; height:36px; cursor:pointer; border-radius:50%; font-size:20px; display:flex; align-items:center; justify-content:center; }
+        .nav-add-btn { width:34px; height:34px; border-radius:50%; background:var(--wechat-green); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:22px; border:none; }
+        .chat-header-status { font-size:14px; color:#999; display:none; flex:1; text-align:center; }
+        .chat-header-status.active { display:block; }
+        .main-content { flex:1; overflow-y:auto; overflow-x:hidden; scroll-behavior:smooth; }
+        .view { display:none; flex-direction:column; height:100%; animation:fadeSlideIn 0.3s; }
+        .view.active { display:flex; }
+        @keyframes fadeSlideIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+        .friend-list { flex:1; overflow-y:auto; background:#fff; }
+        .friend-item { display:flex; align-items:center; padding:14px 16px; cursor:pointer; gap:12px; border-bottom:0.5px solid #f0f0f0; }
+        .friend-avatar { width:50px; height:50px; border-radius:50%; background:linear-gradient(135deg,#a8d8ea,#7ec8e3); display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; font-size:20px; overflow:hidden; }
+        .friend-info { flex:1; min-width:0; }
+        .friend-name { font-size:16px; font-weight:500; color:#1a1a1a; margin-bottom:3px; }
+        .friend-preview { font-size:13px; color:#999; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .friend-time { font-size:11px; color:#bbb; flex-shrink:0; margin-top:4px; }
+        .chat-messages { flex:1; overflow-y:auto; padding:12px 14px; display:flex; flex-direction:column; gap:8px; background:#EDEDED; }
+        .message-row { display:flex; align-items:flex-start; gap:8px; margin-bottom:2px; animation:msgIn 0.3s; }
+        .message-row.received { flex-direction:row; }
+        .message-row.sent { flex-direction:row-reverse; }
+        @keyframes msgIn { from { opacity:0; transform:translateY(10px) scale(0.95); } to { opacity:1; transform:translateY(0) scale(1); } }
+        .msg-avatar-wrapper { flex-shrink:0; width:36px; height:36px; margin-top:0; }
+        .msg-avatar { width:36px; height:36px; border-radius:4px; display:flex; align-items:center; justify-content:center; font-weight:600; color:#fff; font-size:14px; cursor:pointer; overflow:hidden; background:#ddd; }
+        .msg-content-wrapper { display:flex; flex-direction:column; max-width:68%; }
+        .message-row.sent .msg-content-wrapper { align-items:flex-end; }
+        .message-row.received .msg-content-wrapper { align-items:flex-start; }
+        .msg-bubble { padding:10px 14px; border-radius:4px 16px 16px 16px; font-size:15px; line-height:1.5; word-break:break-word; position:relative; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .message-row.received .msg-bubble { background:#fff; color:#1a1a1a; border-radius:4px 16px 16px 16px; }
+        .message-row.sent .msg-bubble { background:#95EC69; color:#1a1a1a; border-radius:16px 4px 16px 16px; }
+        .msg-status { font-size:11px; margin-top:3px; padding:0 4px; }
+        .msg-status.sending { color: #aaa; }
+        .msg-status.failed { color: #FF3B30; }
+        .msg-time { font-size:10px; color:#aaa; text-align:center; margin:8px 0 4px; }
+        .chat-input-area { display:flex; align-items:center; padding:10px 12px; gap:10px; background:#f8f8f8; border-top:0.5px solid #e0e0e0; }
+        .chat-input { flex:1; border:1.5px solid #e0e0e0; border-radius:22px; padding:10px 16px; font-size:15px; outline:none; background:#fff; }
+        .send-btn { width:44px; height:44px; border-radius:50%; background:var(--wechat-green); color:#fff; border:none; cursor:pointer; font-size:16px; font-weight:600; display:flex; align-items:center; justify-content:center; }
+        .bottom-nav { display:flex; border-top:0.5px solid #e0e0e0; background:#fafafa; flex-shrink:0; padding-bottom:env(safe-area-inset-bottom,0); }
+        .bottom-nav .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:8px 0 6px; cursor:pointer; color:#999; font-size:11px; }
+        .bottom-nav .nav-item.active { color:var(--wechat-green); font-weight:600; }
+        .settings-content { flex:1; overflow-y:auto; background:#EDEDED; }
+        .settings-section { background:#fff; margin:12px 0; }
+        .settings-item { display:flex; align-items:center; justify-content:space-between; padding:15px 16px; border-bottom:0.5px solid #f0f0f0; cursor:pointer; }
+        .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.55); z-index:100; display:flex; align-items:flex-end; justify-content:center; }
+        .modal-sheet { background:#fff; border-radius:16px 16px 0 0; width:100%; max-width:430px; padding:20px 20px 30px; animation:slideUp 0.3s; }
+        @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+        .modal-input-group { margin-bottom:14px; }
+        .modal-input-group label { display:block; font-size:13px; font-weight:600; color:#555; margin-bottom:6px; }
+        .modal-input-group input, .modal-input-group textarea { width:100%; border:1.5px solid #e0e0e0; border-radius:10px; padding:11px 14px; font-size:15px; outline:none; background:#f9f9f9; }
+        .modal-buttons { display:flex; gap:10px; margin-top:20px; }
+        .modal-btn { flex:1; padding:12px; border-radius:10px; border:none; font-size:15px; font-weight:600; cursor:pointer; }
+        .modal-btn.primary { background:var(--wechat-green); color:#fff; }
+        .toast { position:fixed; top:30px; left:50%; transform:translateX(-50%); background:#333; color:#fff; padding:10px 22px; border-radius:20px; font-size:14px; z-index:200; }
+        .hidden-file-input { position:absolute; width:0; height:0; opacity:0; }
+        .edit-avatar-preview { width:70px; height:70px; border-radius:50%; background:#ddd; margin:0 auto 10px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:600; color:#fff; font-size:24px; overflow:hidden; }
+    </style>
+</head>
+<body>
+<div class="phone-frame" id="app">
+    <div class="nav-header" id="mainNavHeader"><span class="nav-spacer"></span><span class="nav-title">💬 聊天</span><button class="nav-add-btn" id="addFriendBtn">+</button></div>
+    <div class="nav-header chat-header" id="chatNavHeader" style="display:none;">
+        <div class="nav-back" id="chatBackBtn">←</div>
+        <span class="chat-header-status" id="chatHeaderStatus">对方正在输入...</span>
+        <span class="nav-spacer"></span>
+    </div>
+    <div class="main-content" id="mainContent">
+        <div class="view active" id="viewFriendList"><div class="friend-list" id="friendList"><div class="empty-state"><p>还没有好友<br>点击右上角 <b>+</b> 添加吧</p></div></div></div>
+        <div class="view" id="viewSettings"><div class="settings-content" id="settingsContent"></div></div>
+        <div class="view" id="viewChat"><div class="chat-messages" id="chatMessages"></div><div class="chat-input-area"><input type="text" class="chat-input" id="chatInput" placeholder="输入消息..." autocomplete="off"><button class="send-btn" id="sendBtn"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button></div></div>
+    </div>
+    <div class="bottom-nav" id="bottomNav">
+        <div class="nav-item active" id="navChats"><span class="nav-icon">💬</span><span>聊天</span></div>
+        <div class="nav-item" id="navSettings"><span class="nav-icon">⚙️</span><span>设置</span></div>
+    </div>
+</div>
+<div class="modal-overlay" id="addFriendModal" style="display:none;"><div class="modal-sheet"><h3>添加 AI 好友</h3><div class="modal-input-group"><label>好友名字</label><input type="text" id="newFriendName"></div><div class="modal-input-group"><label>好友人设</label><textarea id="newFriendPersona"></textarea></div><div class="modal-buttons"><button class="modal-btn cancel" id="cancelAddFriend">取消</button><button class="modal-btn primary" id="confirmAddFriend">添加</button></div></div></div>
+    <div class="modal-overlay" id="editFriendModal" style="display:none;"><div class="modal-sheet"><h3>编辑好友资料</h3><div class="edit-avatar-preview" id="editAvatarPreview">?</div><div class="modal-input-group"><label>备注</label><input type="text" id="editFriendRemark"></div><div class="modal-input-group"><label>人设</label><textarea id="editFriendPersona"></textarea></div><div class="modal-buttons"><button class="modal-btn cancel" id="cancelEditFriend">取消</button><button class="modal-btn primary" id="saveEditFriend">保存</button></div></div></div>
+    <input type="file" class="hidden-file-input" id="userAvatarInput" accept="image/*">
+    <input type="file" class="hidden-file-input" id="friendAvatarInput" accept="image/*">
+
+<script>
+(function() {
+    const STORAGE_KEY = 'wechat_ai_chat_data';
+    function getDefaultData() {
+        return {
+            friends: [],
+            settings: { apiKey: '', modelName: 'deepseek-ai/DeepSeek-V3', userAvatar: '', historyCount: 20 },
+            currentFriendId: null
+        };
+    }
+    function loadData() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                const data = JSON.parse(raw);
+                data.settings = { ...getDefaultData().settings, ...(data.settings || {}) };
+                data.friends = data.friends || [];
+                data.friends.forEach(f => { if (!f.messages) f.messages = []; if (f.remark === undefined) f.remark = ''; });
+                data.currentFriendId = data.currentFriendId || null;
+                if (!data.settings.historyCount) data.settings.historyCount = 20;
+                return data;
+            }
+        } catch (e) {}
+        return getDefaultData();
+    }
+    function saveData(data) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {} }
+
+    let appData = loadData();
+    const $ = (sel) => document.querySelector(sel);
+
+    const mainNavHeader = $('#mainNavHeader');
+    const chatNavHeader = $('#chatNavHeader');
+    const bottomNav = $('#bottomNav');
+    const viewFriendList = $('#viewFriendList');
+    const viewSettings = $('#viewSettings');
+    const viewChat = $('#viewChat');
+    const friendListEl = $('#friendList');
+    const settingsContent = $('#settingsContent');
+    const chatMessages = $('#chatMessages');
+    const chatInput = $('#chatInput');
+    const sendBtn = $('#sendBtn');
+    const chatHeaderStatus = $('#chatHeaderStatus');
+    const addFriendBtn = $('#addFriendBtn');
+    const addFriendModal = $('#addFriendModal');
+    const newFriendName = $('#newFriendName');
+    const newFriendPersona = $('#newFriendPersona');
+    const cancelAddFriend = $('#cancelAddFriend');
+    const confirmAddFriend = $('#confirmAddFriend');
+    const userAvatarInput = $('#userAvatarInput');
+    const friendAvatarInput = $('#friendAvatarInput');
+    const navChats = $('#navChats');
+    const navSettings = $('#navSettings');
+    const chatBackBtn = $('#chatBackBtn');
+    const editFriendModal = $('#editFriendModal');
+    const editAvatarPreview = $('#editAvatarPreview');
+    const editFriendRemark = $('#editFriendRemark');
+    const editFriendPersona = $('#editFriendPersona');
+    const cancelEditFriend = $('#cancelEditFriend');
+    const saveEditFriend = $('#saveEditFriend');
+
+    let currentView = 'friendList';
+    let currentChatFriendId = null;
+    let pendingEditFriendId = null;
+    let pendingNewAvatar = null;
+
+    function showToast(msg, type='info') {
+        const existing = document.querySelector('.toast');
+        if(existing) existing.remove();
+        const toast = document.createElement('div');
+        toast.className = 'toast ' + type;
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.remove(); }, 1800);
+    }
+
+    function compressImage(file, maxSize=200) {
+        return new Promise((resolve, reject) => {
+            if(!file || !file.type.startsWith('image/')) return reject(new Error('请选择图片文件'));
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let { width, height } = img;
+                    const minSide = Math.min(width, height);
+                    const sx = (width - minSide)/2, sy = (height - minSide)/2;
+                    canvas.width = maxSize; canvas.height = maxSize;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, maxSize, maxSize);
+                    resolve(canvas.toDataURL('image/jpeg', 0.7));
+                };
+                img.onerror = ()=> reject(new Error('图片加载失败'));
+                img.src = e.target.result;
+            };
+            reader.onerror = ()=> reject(new Error('文件读取失败'));
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function renderAvatar(avatarData, name) {
+        if (avatarData && avatarData.startsWith('data:image')) {
+            return `<img src="${avatarData}" alt="${name||''}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">`;
+        }
+        const initial = (name || '?').charAt(0).toUpperCase();
+        const colors = ['#FF6B6B','#4ECDC4','#45B7D1','#F9CA24','#6C5CE7','#A29BFE','#FD79A8','#00B894','#E17055','#0984E3'];
+        const colorIndex = (name||'?').split('').reduce((acc,c)=>acc+c.charCodeAt(0),0) % colors.length;
+        return `<div style="width:100%;height:100%;border-radius:4px;background:${colors[colorIndex]};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;">${initial}</div>`;
+    }
+
+    function getDisplayName(friend) {
+        return (friend.remark && friend.remark.trim()) ? friend.remark.trim() : friend.name;
+    }
+
+    function formatTime(timestamp) {
+        if(!timestamp) return '';
+        const d = new Date(timestamp), now = new Date();
+        const diffDays = Math.floor((now-d)/(86400000));
+        const h = d.getHours().toString().padStart(2,'0'), m = d.getMinutes().toString().padStart(2,'0');
+        if(diffDays===0) return h+':'+m;
+        if(diffDays===1) return '昨天 '+h+':'+m;
+        if(diffDays<7) return ['周日','周一','周二','周三','周四','周五','周六'][d.getDay()]+' '+h+':'+m;
+        return (d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getDate().toString().padStart(2,'0')+' '+h+':'+m;
+    }
+
+    function escapeHtml(str) { const d=document.createElement('div'); d.textContent=str; return d.innerHTML; }
+
+    function renderFriendList() {
+        const friends = appData.friends;
+        const emptyState = document.querySelector('.empty-state');
+        if(friends.length===0) {
+            friendListEl.innerHTML = '';
+            if(emptyState) friendListEl.appendChild(emptyState);
+        } else {
+            if(emptyState && emptyState.parentNode) emptyState.remove();
+            let html = '';
+            friends.forEach(f=>{
+                const displayName = getDisplayName(f);
+                const lastMsg = f.messages?.length ? f.messages[f.messages.length-1] : null;
+                const preview = lastMsg ? (lastMsg.role==='user'?'你: ':'')+lastMsg.content : '开始聊天吧~';
+                html += `<div class="friend-item" data-friend-id="${f.id}">
+                    <div class="friend-avatar">${renderAvatar(f.avatar, displayName)}</div>
+                    <div class="friend-info"><div class="friend-name">${escapeHtml(displayName)}</div><div class="friend-preview">${escapeHtml(preview)}</div></div>
+                    <span class="friend-time">${lastMsg?formatTime(lastMsg.time):''}</span>
+                </div>`;
+            });
+            friendListEl.innerHTML = html;
+            friendListEl.querySelectorAll('.friend-item').forEach(item=>{
+                item.addEventListener('click', ()=> openChat(item.dataset.friendId));
+            });
+        }
+    }
+
+    function renderSettings() {
+        const s = appData.settings;
+        const apiMask = s.apiKey ? '••••••••'+s.apiKey.slice(-4) : '未配置';
+        settingsContent.innerHTML = `
+        <div class="settings-section">
+            <div class="settings-section-title">👤 个人设置</div>
+            <div class="settings-item" id="settingUserAvatar">
+                <span class="settings-item-label">我的头像</span>
+                <div class="settings-avatar-preview">${renderAvatar(s.userAvatar, '我')}</div>
+                <span class="settings-item-arrow">›</span>
+            </div>
+        </div>
+        <div class="settings-section">
+            <div class="settings-section-title">🔑 API 配置（硅基流动）</div>
+            <div class="settings-item" id="settingApiKey">
+                <span class="settings-item-label">API 密钥</span>
+                <span class="settings-item-value">${apiMask}</span>
+                <span class="settings-item-arrow">›</span>
+            </div>
+            <div class="settings-item" id="settingModelName">
+                <span class="settings-item-label">模型名称</span>
+                <span class="settings-item-value">${escapeHtml(s.modelName||'未设置')}</span>
+                <span class="settings-item-arrow">›</span>
+            </div>
+        </div>
+        <div class="settings-section">
+            <div class="settings-section-title">🧠 记忆设置</div>
+            <div class="settings-item" id="settingHistoryCount">
+                <span class="settings-item-label">携带历史消息数</span>
+                <span class="settings-item-value">${s.historyCount || 20} 条</span>
+                <span class="settings-item-arrow">›</span>
+            </div>
+        </div>`;
+        $('#settingUserAvatar')?.addEventListener('click', ()=> userAvatarInput.click());
+        $('#settingApiKey')?.addEventListener('click', ()=>{
+            const key = prompt('API密钥:', appData.settings.apiKey||'');
+            if(key!==null) { appData.settings.apiKey = key.trim(); saveData(appData); renderSettings(); showToast('已保存','success'); }
+        });
+        $('#settingModelName')?.addEventListener('click', ()=>{
+            const model = prompt('模型名称:', appData.settings.modelName||'');
+            if(model && model.trim()) { appData.settings.modelName = model.trim(); saveData(appData); renderSettings(); showToast('已保存','success'); }
+        });
+        $('#settingHistoryCount')?.addEventListener('click', ()=>{
+            const count = prompt('请输入每次对话携带的历史消息条数（1-100）：', appData.settings.historyCount || 20);
+            if(count !== null) {
+                const num = parseInt(count, 10);
+                if (isNaN(num) || num < 1 || num > 100) { showToast('请输入1到100之间的数字', 'error'); return; }
+                appData.settings.historyCount = num;
+                saveData(appData);
+                renderSettings();
+                showToast(`已设置为携带最近 ${num} 条历史消息`, 'success');
+            }
+        });
+    }
+
+    function renderChatMessages(friendId) {
+        const friend = appData.friends.find(f=>f.id===friendId);
+        if(!friend) return;
+        const messages = friend.messages || [];
+        let html = '', lastDate = '';
+        const displayName = getDisplayName(friend);
+        messages.forEach((msg) => {
+            const d = new Date(msg.time);
+            const dateStr = d.toLocaleDateString('zh-CN',{month:'long',day:'numeric',weekday:'short'});
+            if(dateStr!==lastDate) { html+=`<div class="msg-time">${dateStr}</div>`; lastDate=dateStr; }
+            const isUser = msg.role==='user';
+            const avatarHtml = isUser ? renderAvatar(appData.settings.userAvatar, '我') : renderAvatar(friend.avatar, displayName);
+            let statusHtml = '';
+            if (isUser && msg.status === 'sending') { statusHtml = '<div class="msg-status sending">发送中...</div>'; }
+            else if (isUser && msg.status === 'failed') { statusHtml = ''; }
+            html += `<div class="message-row ${isUser?'sent':'received'}">
+                <div class="msg-avatar-wrapper">
+                    <div class="msg-avatar" data-friend-id="${isUser?'':friendId}">${avatarHtml}</div>
+                </div>
+                <div class="msg-content-wrapper">
+                    <div class="msg-bubble">${escapeHtml(msg.content)}</div>
+                    ${statusHtml}
+                </div>
+            </div>`;
+        });
+        chatMessages.innerHTML = html;
+        chatMessages.querySelectorAll('.msg-avatar[data-friend-id]').forEach(av => {
+            av.addEventListener('click', () => openEditFriendModal(av.dataset.friendId));
+        });
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function setTypingStatus(isTyping) {
+        if (isTyping) { chatHeaderStatus.classList.add('active'); }
+        else { chatHeaderStatus.classList.remove('active'); }
+    }
+
+    function switchView(view) {
+        currentView = view;
+        viewFriendList.classList.remove('active');
+        viewSettings.classList.remove('active');
+        viewChat.classList.remove('active');
+        mainNavHeader.style.display = 'none';
+        chatNavHeader.style.display = 'none';
+        bottomNav.style.display = 'none';
+        navChats.classList.remove('active');
+        navSettings.classList.remove('active');
+        if(view==='friendList') {
+            viewFriendList.classList.add('active');
+            mainNavHeader.style.display = 'flex';
+            bottomNav.style.display = 'flex';
+            navChats.classList.add('active');
+            addFriendBtn.style.display = 'flex';
+            renderFriendList();
+        } else if(view==='settings') {
+            viewSettings.classList.add('active');
+            mainNavHeader.style.display = 'flex';
+            bottomNav.style.display = 'flex';
+            navSettings.classList.add('active');
+            addFriendBtn.style.display = 'none';
+            renderSettings();
+        } else if(view==='chat') {
+            viewChat.classList.add('active');
+            chatNavHeader.style.display = 'flex';
+            addFriendBtn.style.display = 'none';
+            chatInput.value = '';
+            chatInput.focus();
+        }
+    }
+
+    function openChat(friendId) {
+        const friend = appData.friends.find(f=>f.id===friendId);
+        if(!friend) return;
+        currentChatFriendId = friendId;
+        appData.currentFriendId = friendId;
+        saveData(appData);
+        setTypingStatus(false);
+        switchView('chat');
+        renderChatMessages(friendId);
+    }
+
+    function goBackToFriendList() {
+        currentChatFriendId = null;
+        appData.currentFriendId = null;
+        saveData(appData);
+        switchView('friendList');
+    }
+
+    function openEditFriendModal(friendId) {
+        const friend = appData.friends.find(f => f.id === friendId);
+        if (!friend) return;
+        pendingEditFriendId = friendId;
+        pendingNewAvatar = null;
+        editAvatarPreview.innerHTML = renderAvatar(friend.avatar, getDisplayName(friend));
+        editFriendRemark.value = friend.remark || '';
+        editFriendPersona.value = friend.persona || '';
+        editFriendModal.style.display = 'flex';
+    }
+
+    function closeEditFriendModal() {
+        editFriendModal.style.display = 'none';
+        pendingEditFriendId = null;
+        pendingNewAvatar = null;
+    }
+
+    editAvatarPreview.addEventListener('click', () => {
+        if (!pendingEditFriendId) return;
+        friendAvatarInput.click();
+    });
+
+    friendAvatarInput.addEventListener('change', async function() {
+        const file = this.files[0];
+        if (!file) return;
+        try {
+            const compressed = await compressImage(file, 200);
+            if (editFriendModal.style.display === 'flex' && pendingEditFriendId) {
+                pendingNewAvatar = compressed;
+                editAvatarPreview.innerHTML = renderAvatar(compressed, '预览');
+            }
+        } catch (e) { showToast('头像设置失败：' + e.message, 'error'); }
+        this.value = '';
+    });
+
+    saveEditFriend.addEventListener('click', () => {
+        if (!pendingEditFriendId) return;
+        const friend = appData.friends.find(f => f.id === pendingEditFriendId);
+        if (!friend) return;
+        const newRemark = editFriendRemark.value.trim();
+        const newPersona = editFriendPersona.value.trim();
+        if (!newPersona) { showToast('人设不能为空', 'error'); return; }
+        friend.remark = newRemark;
+        friend.persona = newPersona;
+        if (pendingNewAvatar) friend.avatar = pendingNewAvatar;
+        saveData(appData);
+        if (currentChatFriendId === pendingEditFriendId) {
+            renderChatMessages(pendingEditFriendId);
+        }
+        renderFriendList();
+        closeEditFriendModal();
+        showToast('好友资料已更新', 'success');
+        if (friend.messages && friend.messages.length > 0) {
+            setTimeout(() => {
+                if (confirm('是否清空与该好友的聊天记录？\n清空后，新人设将立即主导对话风格，但会丢失当前历史。')) {
+                    friend.messages = [];
+                    saveData(appData);
+                    if (currentChatFriendId === pendingEditFriendId) renderChatMessages(pendingEditFriendId);
+                    renderFriendList();
+                    showToast('聊天记录已清空，人设即刻生效', 'success');
+                }
+            }, 300);
+        }
+    });
+
+    cancelEditFriend.addEventListener('click', closeEditFriendModal);
+    editFriendModal.addEventListener('click', (e) => { if (e.target === editFriendModal) closeEditFriendModal(); });
+
+    function generateId() { return Date.now() + Math.random().toString(36).substr(2,9); }
+
+    async function sendMessage() {
+        const text = chatInput.value.trim();
+        if(!text || !currentChatFriendId) return;
+        const friend = appData.friends.find(f=>f.id===currentChatFriendId);
+        if(!friend) return;
+        sendBtn.disabled = true;
+        chatInput.value = '';
+        const msgId = generateId();
+        const userMsg = { role:'user', content:text, time:Date.now(), msgId, status:'sending' };
+        friend.messages.push(userMsg);
+        saveData(appData);
+        renderChatMessages(currentChatFriendId);
+        await performApiCall(friend, userMsg);
+    }
+
+    async function performApiCall(friend, userMsg) {
+        const apiKey = appData.settings.apiKey?.trim();
+        const model = appData.settings.modelName?.trim();
+        if(!apiKey || !model) {
+            userMsg.status = 'failed';
+            saveData(appData); renderChatMessages(currentChatFriendId); sendBtn.disabled=false;
+            return;
+        }
+        setTypingStatus(true);
+        try {
+            const systemPrompt = friend.persona || '你是一个友好的AI助手';
+            const historyCount = appData.settings.historyCount || 20;
+            const recentMsgs = friend.messages.slice(-historyCount);
+            const msgs = [{role:'system',content:systemPrompt}, ...recentMsgs.map(m=>({role:m.role,content:m.content}))];
+            const res = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+                method:'POST',
+                headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+                body: JSON.stringify({model:model, messages:msgs, stream:false, max_tokens:2000, temperature:0.7})
+            });
+            if(!res.ok) throw new Error(`请求失败(${res.status})`);
+            const data = await res.json();
+            const aiText = data.choices?.[0]?.message?.content || '（无回复）';
+            userMsg.status = 'sent';
+            friend.messages.push({role:'assistant', content:aiText, time:Date.now()});
+        } catch(e) {
+            userMsg.status = 'failed';
+        } finally {
+            setTypingStatus(false);
+            saveData(appData);
+            renderChatMessages(currentChatFriendId);
+            sendBtn.disabled = false;
+        }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && currentChatFriendId) {
+            const friend = appData.friends.find(f => f.id === currentChatFriendId);
+            if (!friend) return;
+            const now = Date.now();
+            const retryMsgs = friend.messages.filter(m => {
+                if (m.role !== 'user') return false;
+                if (m.status === 'failed') return true;
+                if (m.status === 'sending' && (now - m.time > 3000)) { m.status = 'failed'; return true; }
+                return false;
+            });
+            if (retryMsgs.length > 0) {
+                (async () => {
+                    for (const msg of retryMsgs) {
+                        msg.status = 'sending';
+                        saveData(appData);
+                        renderChatMessages(currentChatFriendId);
+                        await performApiCall(friend, msg);
+                    }
+                })();
+            }
+        }
+    });
+
+    sendBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keydown', e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMessage(); } });
+    chatBackBtn.addEventListener('click', goBackToFriendList);
+    navChats.addEventListener('click', ()=>{ if(currentView!=='friendList') switchView('friendList'); });
+    navSettings.addEventListener('click', ()=>{ if(currentView!=='settings') switchView('settings'); });
+    addFriendBtn.addEventListener('click', ()=>{ newFriendName.value=''; newFriendPersona.value=''; addFriendModal.style.display='flex'; setTimeout(()=>newFriendName.focus(),300); });
+    cancelAddFriend.addEventListener('click', ()=> addFriendModal.style.display='none');
+    confirmAddFriend.addEventListener('click', ()=>{
+        const name=newFriendName.value.trim(), persona=newFriendPersona.value.trim();
+        if(!name) return showToast('请输入名字','error');
+        if(!persona) return showToast('请输入人设','error');
+        appData.friends.unshift({id:'f_'+Date.now()+Math.random().toString(36).substr(2,6), name, persona, avatar:'', remark:'', messages:[]});
+        saveData(appData); addFriendModal.style.display='none'; renderFriendList(); showToast('已添加 '+name,'success');
+    });
+    addFriendModal.addEventListener('click', e=>{ if(e.target===addFriendModal) addFriendModal.style.display='none'; });
+    userAvatarInput.addEventListener('change', async function(){
+        const file=this.files[0]; if(!file) return;
+        try { const img=await compressImage(file,200); appData.settings.userAvatar=img; saveData(appData); renderSettings(); showToast('头像已更新','success'); } catch(e){ showToast(e.message,'error'); } this.value='';
+    });
+    document.addEventListener('keydown', e=>{
+        if(e.key==='Escape') {
+            if(addFriendModal.style.display==='flex') addFriendModal.style.display='none';
+            if(editFriendModal.style.display==='flex') closeEditFriendModal();
+            if(currentView==='chat') goBackToFriendList();
+        }
+    });
+
+    function init() {
+        if(appData.currentFriendId && appData.friends.find(f=>f.id===appData.currentFriendId)) {
+            openChat(appData.currentFriendId);
+        } else {
+            switchView('friendList');
+        }
+    }
+    init();
+})();
+</script>
+</body>
+</html>
