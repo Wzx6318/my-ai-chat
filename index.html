@@ -2,7 +2,6 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <!-- vivo/安卓关键：interactive-widget=resizes-content 让键盘弹起时正确调整视口 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
     <title>仿微信 AI 助手 Dark</title>
     <style>
@@ -43,24 +42,8 @@
         .msg-row.self { align-self: flex-end; flex-direction: row-reverse; }
         .msg-bubble { padding: 10px 14px; border-radius: 6px; font-size: 15px; line-height: 1.5; word-break: break-all; background: var(--white); color: var(--text-main); margin: 0 10px; white-space: pre-wrap; }
         .msg-row.self .msg-bubble { background: var(--msg-self); color: #fff; }
-        
-        /* 🔒 vivo优化：输入框区域绝对定位兜底 */
-        .input-area { 
-            background: var(--bg-color); 
-            padding: 10px 10px calc(10px + var(--safe-bottom)); 
-            display: flex; align-items: center; 
-            border-top: 1px solid var(--border); 
-            flex-shrink: 0; 
-            /* 禁止任何过渡动画，避免vivo键盘收起时的视觉掉落感 */
-            transition: none !important; 
-        }
-        .input-area input { 
-            flex: 1; height: 36px; border-radius: 4px; border: none; 
-            padding: 0 10px; font-size: 16px; 
-            background: var(--input-bg); color: var(--text-main);
-            /* 防止vivo输入法联想栏遮挡 */
-            caret-color: var(--wechat-green);
-        }
+        .input-area { background: var(--bg-color); padding: 10px 10px calc(10px + var(--safe-bottom)); display: flex; align-items: center; border-top: 1px solid var(--border); flex-shrink: 0; transition: none !important; }
+        .input-area input { flex: 1; height: 36px; border-radius: 4px; border: none; padding: 0 10px; font-size: 16px; background: var(--input-bg); color: var(--text-main); caret-color: var(--wechat-green); }
         .send-btn { margin-left: 10px; padding: 6px 15px; background: var(--wechat-green); color: white; border: none; border-radius: 4px; font-size: 14px; opacity: 0.6; pointer-events: none; flex-shrink: 0; }
         .send-btn.active { opacity: 1; pointer-events: auto; }
         .typing { font-size: 12px; color: var(--text-sub); padding: 0 15px 5px; display: none; flex-shrink: 0; }
@@ -145,11 +128,14 @@
     function init(){
         const saved = localStorage.getItem('wx_clone_pro_data');
         if(saved){try{Object.assign(state,JSON.parse(saved))}catch(e){}}
-        if(!state.friends.length){state.friends=[{id:Date.now(),name:"硅基助手",remark:"硅基助手",avatar:"https://api.dicebear.com/7.x/bottts/svg?seed=AI",persona:"你是一个友好的AI助手，回答简洁专业。",lastMsg:"你好！有什么可以帮你的？",history:[]}]}
+        if(!state.friends.length){
+            state.friends=[{id:Date.now(),name:"硅基助手",remark:"硅基助手",avatar:"https://api.dicebear.com/7.x/bottts/svg?seed=AI",persona:"你是一个友好的AI助手，回答简洁专业。",lastMsg:"你好！有什么可以帮你的？",history:[]}]
+        }
         if(!state.myProfile.avatar) state.myProfile.avatar="https://api.dicebear.com/7.x/avataaars/svg?seed=Me";
-        renderChatList(); loadSettingsUI();
+        renderChatList(); 
+        loadSettingsUI();
         
-        // 🔒 vivo/安卓专属：实时同步视口高度
+        // vivo/安卓专属：实时同步视口高度
         if(window.visualViewport){
             window.visualViewport.addEventListener('resize',()=>{
                 document.getElementById('app').style.height = `${window.visualViewport.height}px`;
@@ -159,41 +145,96 @@
         }
         window.addEventListener('resize',()=>{if(state.currentChatId)setTimeout(scrollToBottom,50)});
         
-        // 🔒 vivo专属：监听输入框失焦，如果是发送导致的则立即抢回焦点
+        // vivo专属：blur守卫防止键盘意外收起
         const input = document.getElementById('msgInput');
         let isSending = false;
         input.addEventListener('blur', () => {
             if (isSending) {
-                // 延迟50ms避开vivo键盘收起动画帧
                 setTimeout(() => {
                     input.focus();
                     isSending = false;
                 }, 50);
             }
         });
-        // 将标志位暴露给全局供sendMessage使用
         window._setSending = (val) => { isSending = val; };
     }
     
     function saveData(){try{localStorage.setItem('wx_clone_pro_data',JSON.stringify(state))}catch(e){alert("存储空间不足！")}}
     function scrollToBottom(){const l=document.getElementById('messageList');requestAnimationFrame(()=>{l.scrollTop=l.scrollHeight})}
     function triggerUpload(id){document.getElementById(id).click()}
-    function handleImageUpload(input,pid,path){const f=input.files;if(!f)return;if(f.size>500*1024){alert("图片需小于500KB");input.value='';return}const r=new FileReader();r.onload=e=>{document.getElementById(pid).src=e.target.result;const k=path.split('.');if(k==='tempFriend')tempFriend[k]=e.target.result;else state[k][k]=e.target.result};r.readAsDataURL(f)}
-    function switchTab(tab){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('mainFooter').style.display='flex';document.getElementById('backBtn').style.display='none';document.getElementById('addBtn').style.display=tab==='chat'?'block':'none';if(tab==='chat'){document.getElementById('page-chat-list').classList.add('active');document.querySelector('.tab:nth-child(1)').classList.add('active');document.getElementById('pageTitle').innerText="微信"}else{document.getElementById('page-settings').classList.add('active');document.querySelector('.tab:nth-child(2)').classList.add('active');document.getElementById('pageTitle').innerText="设置"}}
-    function openChat(id){state.currentChatId=id;const f=state.friends.find(x=>x.id===id);document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-chat-detail').classList.add('active');document.getElementById('mainFooter').style.display='none';document.getElementById('backBtn').style.display='block';document.getElementById('addBtn').style.display='none';document.getElementById('pageTitle').innerText=f.remark||f.name;renderMessages();document.getElementById('msgInput').value='';toggleSendBtn();setTimeout(scrollToBottom,100)}
-    function goBack(){state.currentChatId=null;switchTab('chat');renderChatList()}
-    function renderChatList(){const c=document.getElementById('chatListContainer');if(!state.friends.length){c.innerHTML='<div style="text-align:center;padding:60px;color:#777;font-size:14px;">暂无好友<br>点击右上角 ＋ 添加</div>';return}c.innerHTML=state.friends.map(f=>`<div class="chat-item" onclick="openChat(${f.id})"><img class="avatar" src="${f.avatar||DEFAULT_AVATAR}"><div class="chat-info"><div class="chat-name">${f.remark||f.name}</div><div class="chat-msg">${f.lastMsg||''}</div></div></div>`).join('')}
-    function renderMessages(){const f=state.friends.find(x=>x.id===state.currentChatId);if(!f)return;document.getElementById('messageList').innerHTML=f.history.map(m=>`<div class="msg-row ${m.role==='user'?'self':''}"><img class="avatar" style="width:40px;height:40px;cursor:pointer;" src="${m.role==='user'?state.myProfile.avatar:f.avatar}" onclick="${m.role==='assistant'?`openEditFriendModal(${f.id})`:''}" onerror="this.src='${DEFAULT_AVATAR}'"><div class="msg-bubble">${escapeHtml(m.content)}</div></div>`).join('');scrollToBottom()}
-    function escapeHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML}
-    function toggleSendBtn(){document.getElementById('sendBtn').classList.toggle('active',!!document.getElementById('msgInput').value.trim())}<websource>source_group_web_1</websource>
+    
+    // ✅ 已修复：恢复正确的 file 读取逻辑和 state 路径解析
+    function handleImageUpload(input, previewId, path){
+        const file = input.files[0];
+        if(!file) return;
+        if(file.size > 500*1024){
+            alert("图片需小于500KB");
+            input.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById(previewId).src = e.target.result;
+            const keys = path.split('.');
+            if(keys[0] === 'tempFriend'){
+                tempFriend[keys[1]] = e.target.result;
+            } else {
+                state[keys[0]][keys[1]] = e.target.result;
+            }
+        };
+        reader.readAsDataURL(file);
+    }
 
-    // 🔥 vivo S30 专属优化版 sendMessage
+    function switchTab(tab){
+        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.getElementById('mainFooter').style.display='flex';
+        document.getElementById('backBtn').style.display='none';
+        document.getElementById('addBtn').style.display= tab==='chat' ? 'block' : 'none';
+        if(tab==='chat'){
+            document.getElementById('page-chat-list').classList.add('active');
+            document.querySelector('.tab:nth-child(1)').classList.add('active');
+            document.getElementById('pageTitle').innerText="微信";
+        }else{
+            document.getElementById('page-settings').classList.add('active');
+            document.querySelector('.tab:nth-child(2)').classList.add('active');
+            document.getElementById('pageTitle').innerText="设置";
+        }
+    }
+    function openChat(id){
+        state.currentChatId=id;
+        const f=state.friends.find(x=>x.id===id);
+        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+        document.getElementById('page-chat-detail').classList.add('active');
+        document.getElementById('mainFooter').style.display='none';
+        document.getElementById('backBtn').style.display='block';
+        document.getElementById('addBtn').style.display='none';
+        document.getElementById('pageTitle').innerText=f.remark||f.name;
+        renderMessages();
+        document.getElementById('msgInput').value='';
+        toggleSendBtn();
+        setTimeout(scrollToBottom,100);
+    }
+    function goBack(){state.currentChatId=null;switchTab('chat');renderChatList()}
+    function renderChatList(){
+        const c=document.getElementById('chatListContainer');
+        if(!state.friends.length){c.innerHTML='<div style="text-align:center;padding:60px;color:#777;font-size:14px;">暂无好友<br>点击右上角 ＋ 添加</div>';return}
+        c.innerHTML=state.friends.map(f=>`<div class="chat-item" onclick="openChat(${f.id})"><img class="avatar" src="${f.avatar||DEFAULT_AVATAR}"><div class="chat-info"><div class="chat-name">${f.remark||f.name}</div><div class="chat-msg">${f.lastMsg||''}</div></div></div>`).join('');
+    }
+    function renderMessages(){
+        const f=state.friends.find(x=>x.id===state.currentChatId);
+        if(!f)return;
+        document.getElementById('messageList').innerHTML=f.history.map(m=>`<div class="msg-row ${m.role==='user'?'self':''}"><img class="avatar" style="width:40px;height:40px;cursor:pointer;" src="${m.role==='user'?state.myProfile.avatar:f.avatar}" onclick="${m.role==='assistant'?`openEditFriendModal(${f.id})`:''}" onerror="this.src='${DEFAULT_AVATAR}'"><div class="msg-bubble">${escapeHtml(m.content)}</div></div>`).join('');
+        scrollToBottom();
+    }
+    function escapeHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML}
+    function toggleSendBtn(){document.getElementById('sendBtn').classList.toggle('active',!!document.getElementById('msgInput').value.trim())}
+
     async function sendMessage(){
         const input = document.getElementById('msgInput');
         const text = input.value.trim();
         if(!text||!state.currentChatId) return;
         
-        // ✅ 标记正在发送，触发blur守卫
         if(window._setSending) window._setSending(true);
         
         const f = state.friends.find(x=>x.id===state.currentChatId);
@@ -204,7 +245,6 @@
         renderMessages();
         saveData();
 
-        // ✅ 双重保险：延迟聚焦（vivo需要比iOS更长的延迟避开键盘动画）
         setTimeout(() => { input.focus(); }, 60);
 
         if(!state.apiConfig.key){alert("请先在设置中填写API Key");if(window._setSending)window._setSending(false);return}
@@ -218,7 +258,8 @@
             const res=await fetch("https://api.siliconflow.cn/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${state.apiConfig.key}`},body:JSON.stringify({model:state.apiConfig.model,messages:msgs,stream:false})});
             if(!res.ok) throw new Error(`API ${res.status}`);
             const data=await res.json();
-            const reply=data.choices.message.content;
+            // ✅ 已修复：补全正确的 API 返回路径
+            const reply = data.choices[0].message.content;
             f.history.push({role:'assistant',content:reply});
             f.lastMsg=reply.length>20?reply.substring(0,20)+'...':reply;
         }catch(err){
@@ -228,9 +269,7 @@
             document.getElementById('typingIndicator').style.display='none';
             renderMessages();
             saveData();
-            // ✅ AI回复后再次确保键盘在线
             setTimeout(() => { input.focus(); }, 60);
-            // 300ms后解除发送标记，允许用户手动收起键盘
             setTimeout(() => { if(window._setSending) window._setSending(false); }, 300);
         }
     }
@@ -243,6 +282,7 @@
     function loadSettingsUI(){document.getElementById('myAvatarPreview').src=state.myProfile.avatar||DEFAULT_AVATAR;document.getElementById('myNameInput').value=state.myProfile.name;document.getElementById('apiKeyInput').value=state.apiConfig.key;document.getElementById('modelNameInput').value=state.apiConfig.model}
     function saveSettings(){state.myProfile.name=document.getElementById('myNameInput').value.trim()||"我";state.apiConfig.key=document.getElementById('apiKeyInput').value.trim();state.apiConfig.model=document.getElementById('modelNameInput').value.trim()||"Qwen/Qwen2.5-7B-Instruct";saveData();alert("✅ 设置已保存");renderMessages()}
     function clearAllData(){if(confirm("确定清除所有数据？")){localStorage.removeItem('wx_clone_pro_data');location.reload()}}
+    
     init();
 </script>
 </body>
