@@ -125,17 +125,19 @@
         .msg-time { font-size:10px; color:#aaa; text-align:center; margin:8px 0 4px; }
         /* 底部输入栏固定，解决键盘遮挡 */
         .chat-input-area { 
-            position: sticky;
-            bottom: 0;
-            display:flex; 
-            align-items:center; 
-            padding:10px 12px; 
-            gap:10px; 
-            background:#f8f8f8; 
-            border-top:0.5px solid #e0e0e0;
-            /* 适配底部安全区 */
-            padding-bottom: calc(10px + env(safe-area-inset-bottom));
-            z-index: 9;
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          display:flex; 
+          align-items:center; 
+          padding:10px 12px; 
+          gap:10px; 
+          background:#f8f8f8; 
+          border-top:0.5px solid #e0e0e0;
+         /* 适配底部安全区 */
+          padding-bottom: calc(10px + env(safe-area-inset-bottom));
+          z-index: 99;
         }
         .chat-input { flex:1; border:1.5px solid #e0e0e0; border-radius:22px; padding:10px 16px; font-size:15px; outline:none; background:#fff; }
         .send-btn { width:44px; height:44px; border-radius:50%; background:var(--wechat-green); color:#fff; border:none; cursor:pointer; font-size:16px; font-weight:600; display:flex; align-items:center; justify-content:center; }
@@ -556,21 +558,28 @@
     function generateId() { return Date.now() + Math.random().toString(36).substr(2,9); }
 
     async function sendMessage() {
-    const text = chatInput.value.trim();
-    if(!text || !currentChatFriendId) return;
-    const friend = appData.friends.find(f=>f.id===currentChatFriendId);
-    if(!friend) return;
-    sendBtn.disabled = true;
-    chatInput.value = '';
-    const msgId = generateId();
-    const userMsg = { role:'user', content:text, time:Date.now(), msgId, status:'sending' };
-    friend.messages.push(userMsg);
-    saveData(appData);
-    renderChatMessages(currentChatFriendId);
-    await performApiCall(friend, userMsg);
-    requestAnimationFrame(() => {
-        chatInput.focus({ preventScroll: true });
-    });
+  const text = chatInput.value.trim();
+  if (!text || !currentChatFriendId) return;
+  const friend = appData.friends.find(f => f.id === currentChatFriendId);
+  if (!friend) return;
+
+  sendBtn.disabled = true;
+  chatInput.value = '';
+
+  const msgId = generateId();
+  const userMsg = { role: 'user', content: text, time: Date.now(), msgId, status: 'sending' };
+  friend.messages.push(userMsg);
+  saveData(appData);
+  renderChatMessages(currentChatFriendId);
+
+  await performApiCall(friend, userMsg);
+
+  // 强制聚焦，但禁止页面滚动，输入框就不会被顶下去
+  requestAnimationFrame(() => {
+    chatInput.focus({ preventScroll: true });
+    // 额外再把聊天框滚到底部，消息不被遮挡
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  });
 }
 
     async function performApiCall(friend, userMsg) {
