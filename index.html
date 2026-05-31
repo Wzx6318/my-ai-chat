@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <!-- 增强移动端适配，适配安卓WebView、刘海屏、安全区 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AI 聊天</title>
     <link rel="manifest" href="manifest.json">
@@ -28,28 +29,60 @@
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
-            background: #1a1a1a; display:flex; justify-content:center; align-items:center;
-            min-height:100vh; -webkit-tap-highlight-color:transparent; -webkit-font-smoothing:antialiased;
-            user-select:none; -webkit-user-select:none;
+            background: #1a1a1a; 
+            min-height: 100vh;
+            min-height: 100dvh;
+            overflow: hidden;
+            -webkit-tap-highlight-color:transparent; 
+            -webkit-font-smoothing:antialiased;
+            user-select:none; 
+            -webkit-user-select:none;
         }
+        /* 适配手机全屏，去除外部边框，纯APP体验 */
         .phone-frame {
-            width:430px; max-width:100vw; height:92vh; max-height:900px;
-            background: var(--wechat-bg); border-radius:24px; overflow:hidden;
-            display:flex; flex-direction:column; position:relative;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px #333;
-        }
-        @media (max-width:440px) {
-            .phone-frame { width:100vw; height:100vh; max-height:100vh; border-radius:0; box-shadow:none; }
+            width:100vw; 
+            height:100vh; 
+            height: 100dvh;
+            max-width: 100vw;
+            max-height: 100dvh;
+            background: var(--wechat-bg); 
+            border-radius:0; 
+            overflow:hidden;
+            display:flex; 
+            flex-direction:column; 
+            position:relative;
+            box-shadow: none;
+            /* 适配安卓底部导航栏/安全区 */
+            padding-bottom: env(safe-area-inset-bottom);
         }
         .nav-header {
-            background:var(--wechat-bg); padding:10px 16px 14px; display:flex;
-            justify-content:space-between; align-items:center; flex-shrink:0; z-index:10;
-            border-bottom:0.5px solid var(--wechat-border); min-height:60px;
+            background:var(--wechat-bg); 
+            padding:10px 16px 14px; 
+            padding-top: calc(10px + env(safe-area-inset-top));
+            display:flex;
+            justify-content:space-between; 
+            align-items:center; 
+            flex-shrink:0; 
+            z-index:10;
+            border-bottom:0.5px solid var(--wechat-border); 
+            min-height:60px;
         }
         .nav-title { font-size:18px; font-weight:700; color:var(--wechat-dark); }
         .nav-back { width:36px; height:36px; cursor:pointer; border-radius:50%; font-size:20px; display:flex; align-items:center; justify-content:center; }
         .nav-add-btn { width:34px; height:34px; border-radius:50%; background:var(--wechat-green); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:22px; border:none; }
-        .chat-header-status { font-size:14px; color:#999; display:none; flex:1; text-align:center; }
+        .chat-header-status {
+          font-size: 15px;
+          color: #333;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          display: none;
+          flex: 1;
+          text-align: center;
+       }
+        .chat-header-status.active {
+           display: block;
+        }
         .chat-header-status.active { display:block; }
         .main-content { flex:1; overflow-y:auto; overflow-x:hidden; scroll-behavior:smooth; }
         .view { display:none; flex-direction:column; height:100%; animation:fadeSlideIn 0.3s; }
@@ -62,7 +95,18 @@
         .friend-name { font-size:16px; font-weight:500; color:#1a1a1a; margin-bottom:3px; }
         .friend-preview { font-size:13px; color:#999; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         .friend-time { font-size:11px; color:#bbb; flex-shrink:0; margin-top:4px; }
-        .chat-messages { flex:1; overflow-y:auto; padding:12px 14px; display:flex; flex-direction:column; gap:8px; background:#EDEDED; }
+        .chat-messages { 
+            flex:1; 
+            overflow-y:auto; 
+            padding:12px 14px; 
+            padding-bottom: 10px;
+            display:flex; 
+            flex-direction:column; 
+            gap:8px; 
+            background:#EDEDED;
+            /* 防止键盘弹出遮挡消息 */
+            overscroll-behavior: contain;
+        }
         .message-row { display:flex; align-items:flex-start; gap:8px; margin-bottom:2px; animation:msgIn 0.3s; }
         .message-row.received { flex-direction:row; }
         .message-row.sent { flex-direction:row-reverse; }
@@ -79,7 +123,20 @@
         .msg-status.sending { color: #aaa; }
         .msg-status.failed { color: #FF3B30; }
         .msg-time { font-size:10px; color:#aaa; text-align:center; margin:8px 0 4px; }
-        .chat-input-area { display:flex; align-items:center; padding:10px 12px; gap:10px; background:#f8f8f8; border-top:0.5px solid #e0e0e0; }
+        /* 底部输入栏固定，解决键盘遮挡 */
+        .chat-input-area { 
+            position: sticky;
+            bottom: 0;
+            display:flex; 
+            align-items:center; 
+            padding:10px 12px; 
+            gap:10px; 
+            background:#f8f8f8; 
+            border-top:0.5px solid #e0e0e0;
+            /* 适配底部安全区 */
+            padding-bottom: calc(10px + env(safe-area-inset-bottom));
+            z-index: 9;
+        }
         .chat-input { flex:1; border:1.5px solid #e0e0e0; border-radius:22px; padding:10px 16px; font-size:15px; outline:none; background:#fff; }
         .send-btn { width:44px; height:44px; border-radius:50%; background:var(--wechat-green); color:#fff; border:none; cursor:pointer; font-size:16px; font-weight:600; display:flex; align-items:center; justify-content:center; }
         .bottom-nav { display:flex; border-top:0.5px solid #e0e0e0; background:#fafafa; flex-shrink:0; padding-bottom:env(safe-area-inset-bottom,0); }
@@ -89,7 +146,7 @@
         .settings-section { background:#fff; margin:12px 0; }
         .settings-item { display:flex; align-items:center; justify-content:space-between; padding:15px 16px; border-bottom:0.5px solid #f0f0f0; cursor:pointer; }
         .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.55); z-index:100; display:flex; align-items:flex-end; justify-content:center; }
-        .modal-sheet { background:#fff; border-radius:16px 16px 0 0; width:100%; max-width:430px; padding:20px 20px 30px; animation:slideUp 0.3s; }
+        .modal-sheet { background:#fff; border-radius:16px 16px 0 0; width:100%; max-width:100vw; padding:20px 20px 30px; animation:slideUp 0.3s; }
         @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
         .modal-input-group { margin-bottom:14px; }
         .modal-input-group label { display:block; font-size:13px; font-weight:600; color:#555; margin-bottom:6px; }
@@ -97,9 +154,17 @@
         .modal-buttons { display:flex; gap:10px; margin-top:20px; }
         .modal-btn { flex:1; padding:12px; border-radius:10px; border:none; font-size:15px; font-weight:600; cursor:pointer; }
         .modal-btn.primary { background:var(--wechat-green); color:#fff; }
-        .toast { position:fixed; top:30px; left:50%; transform:translateX(-50%); background:#333; color:#fff; padding:10px 22px; border-radius:20px; font-size:14px; z-index:200; }
+        .toast { position:fixed; top:calc(30px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); background:#333; color:#fff; padding:10px 22px; border-radius:20px; font-size:14px; z-index:200; }
         .hidden-file-input { position:absolute; width:0; height:0; opacity:0; }
         .edit-avatar-preview { width:70px; height:70px; border-radius:50%; background:#ddd; margin:0 auto 10px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:600; color:#fff; font-size:24px; overflow:hidden; }
+        /* 空状态样式 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+            font-size: 15px;
+            line-height: 1.8;
+        }
     </style>
 </head>
 <body>
@@ -503,7 +568,6 @@
     saveData(appData);
     renderChatMessages(currentChatFriendId);
     await performApiCall(friend, userMsg);
-    // 👇 在这里强制重新聚焦输入框
     requestAnimationFrame(() => {
         chatInput.focus({ preventScroll: true });
     });
