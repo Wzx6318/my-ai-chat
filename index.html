@@ -491,19 +491,23 @@
     function generateId() { return Date.now() + Math.random().toString(36).substr(2,9); }
 
     async function sendMessage() {
-        const text = chatInput.value.trim();
-        if(!text || !currentChatFriendId) return;
-        const friend = appData.friends.find(f=>f.id===currentChatFriendId);
-        if(!friend) return;
-        sendBtn.disabled = true;
-        chatInput.value = '';
-        const msgId = generateId();
-        const userMsg = { role:'user', content:text, time:Date.now(), msgId, status:'sending' };
-        friend.messages.push(userMsg);
-        saveData(appData);
-        renderChatMessages(currentChatFriendId);
-        await performApiCall(friend, userMsg);
-    }
+    const text = chatInput.value.trim();
+    if(!text || !currentChatFriendId) return;
+    const friend = appData.friends.find(f=>f.id===currentChatFriendId);
+    if(!friend) return;
+    sendBtn.disabled = true;
+    chatInput.value = '';
+    const msgId = generateId();
+    const userMsg = { role:'user', content:text, time:Date.now(), msgId, status:'sending' };
+    friend.messages.push(userMsg);
+    saveData(appData);
+    renderChatMessages(currentChatFriendId);
+    await performApiCall(friend, userMsg);
+    // 👇 在这里强制重新聚焦输入框
+    requestAnimationFrame(() => {
+        chatInput.focus({ preventScroll: true });
+    });
+}
 
     async function performApiCall(friend, userMsg) {
         const apiKey = appData.settings.apiKey?.trim();
