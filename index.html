@@ -1,9 +1,9 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>我的AI - 好友列表</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>我的AI</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -12,12 +12,15 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
         }
         
-        /* 好友列表 */
         .friend-list {
             flex: 1;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         .friend-item {
             display: flex;
@@ -26,11 +29,8 @@
             gap: 12px;
             border-bottom: 1px solid #2a2a3e;
             cursor: pointer;
-            transition: 0.2s;
         }
-        .friend-item:active {
-            background: #2a2a3e;
-        }
+        .friend-item:active { background: #2a2a3e; }
         .friend-avatar {
             width: 56px;
             height: 56px;
@@ -42,33 +42,13 @@
             overflow: hidden;
             flex-shrink: 0;
         }
-        .friend-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .friend-avatar .default-avatar {
-            font-size: 32px;
-        }
-        .friend-info {
-            flex: 1;
-        }
-        .friend-name {
-            font-size: 18px;
-            font-weight: bold;
-            color: white;
-        }
-        .friend-lastmsg {
-            font-size: 13px;
-            color: #aaa;
-            margin-top: 4px;
-        }
-        .friend-time {
-            font-size: 11px;
-            color: #666;
-        }
+        .friend-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .friend-avatar .default-avatar { font-size: 32px; }
+        .friend-info { flex: 1; }
+        .friend-name { font-size: 18px; font-weight: bold; color: white; }
+        .friend-lastmsg { font-size: 13px; color: #aaa; margin-top: 4px; }
+        .friend-time { font-size: 11px; color: #666; }
         
-        /* 聊天界面 */
         .chat-screen {
             display: none;
             flex-direction: column;
@@ -81,12 +61,9 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            flex-shrink: 0;
         }
-        .back-btn {
-            font-size: 24px;
-            cursor: pointer;
-            color: white;
-        }
+        .back-btn { font-size: 24px; cursor: pointer; color: white; }
         .chat-avatar {
             width: 44px;
             height: 44px;
@@ -99,33 +76,12 @@
             flex-shrink: 0;
             cursor: pointer;
         }
-        .chat-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .chat-info {
-            flex: 1;
-        }
-        .chat-name {
-            font-size: 18px;
-            font-weight: bold;
-            color: white;
-            cursor: pointer;
-        }
-        .chat-status {
-            font-size: 12px;
-            color: #aaa;
-        }
-        .memory-badge {
-            background: #2a2a3e;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            color: #aaa;
-        }
+        .chat-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .chat-info { flex: 1; }
+        .chat-name { font-size: 18px; font-weight: bold; color: white; cursor: pointer; }
+        .chat-status { font-size: 12px; color: #aaa; }
+        .memory-badge { background: #2a2a3e; padding: 6px 12px; border-radius: 20px; font-size: 12px; color: #aaa; }
         
-        /* 消息区域 */
         .chat-messages {
             flex: 1;
             overflow-y: auto;
@@ -133,6 +89,7 @@
             display: flex;
             flex-direction: column;
             gap: 16px;
+            -webkit-overflow-scrolling: touch;
         }
         .msg-wrapper {
             display: flex;
@@ -140,13 +97,8 @@
             gap: 8px;
             max-width: 85%;
         }
-        .msg-wrapper-user {
-            align-self: flex-end;
-            flex-direction: row-reverse;
-        }
-        .msg-wrapper-ai {
-            align-self: flex-start;
-        }
+        .msg-wrapper-user { align-self: flex-end; flex-direction: row-reverse; }
+        .msg-wrapper-ai { align-self: flex-start; }
         .msg-avatar {
             width: 36px;
             height: 36px;
@@ -157,15 +109,10 @@
             justify-content: center;
             overflow: hidden;
             flex-shrink: 0;
+            cursor: pointer;
         }
-        .msg-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .msg-avatar .default-avatar {
-            font-size: 20px;
-        }
+        .msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .msg-avatar .default-avatar { font-size: 20px; }
         .msg-bubble {
             max-width: calc(100% - 44px);
             padding: 10px 14px;
@@ -184,13 +131,13 @@
             border-radius: 20px 20px 20px 4px;
         }
         
-        /* 输入区域 */
         .chat-input-area {
             display: flex;
             padding: 12px;
             background: #0f0f1a;
             gap: 8px;
             border-top: 1px solid #2a2a3e;
+            flex-shrink: 0;
         }
         .chat-input {
             flex: 1;
@@ -212,7 +159,6 @@
             cursor: pointer;
         }
         
-        /* 添加好友按钮 */
         .add-friend-btn {
             position: fixed;
             bottom: 20px;
@@ -227,9 +173,9 @@
             font-size: 28px;
             cursor: pointer;
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            z-index: 100;
         }
         
-        /* 弹窗 */
         .modal {
             position: fixed;
             top: 0;
@@ -248,7 +194,6 @@
             padding: 24px;
             width: 280px;
             text-align: center;
-            border: 1px solid #2a2a3e;
         }
         .modal-content input {
             width: 100%;
@@ -260,40 +205,25 @@
             color: white;
             text-align: center;
         }
-        .modal-buttons {
-            display: flex;
-            gap: 12px;
-        }
-        .modal-buttons button {
-            flex: 1;
-            padding: 10px;
-        }
-        #imageInput {
-            display: none;
-        }
+        .modal-buttons { display: flex; gap: 12px; }
+        .modal-buttons button { flex: 1; padding: 10px; }
+        #imageInput { display: none; }
     </style>
 </head>
 <body>
-    <!-- 好友列表界面 -->
     <div id="friendListScreen" class="friend-list">
-        <div style="padding: 16px; text-align: center; color: #aaa; border-bottom: 1px solid #2a2a3e;">
-            🤖 我的AI伙伴
-        </div>
+        <div style="padding: 16px; text-align: center; color: #aaa; border-bottom: 1px solid #2a2a3e;">🤖 我的伙伴们</div>
         <div id="friendListContainer"></div>
     </div>
     <div class="add-friend-btn" id="addFriendBtn">+</div>
     
-    <!-- 聊天界面 -->
     <div id="chatScreen" class="chat-screen">
         <div class="chat-header">
             <div class="back-btn" id="backBtn">←</div>
-            <div class="chat-avatar" id="chatAvatar">
-                <div class="default-avatar">🤖</div>
-                <img style="display:none">
-            </div>
+            <div class="chat-avatar" id="chatAvatar"><div class="default-avatar">🤖</div><img style="display:none"></div>
             <div class="chat-info">
                 <div class="chat-name" id="chatName">AI伙伴</div>
-                <div class="chat-status" id="chatStatus">在线</div>
+                <div class="chat-status">在线</div>
             </div>
             <div class="memory-badge" id="chatMemoryCount">📚 0</div>
         </div>
@@ -308,200 +238,168 @@
 
     <script>
         // ==================== 配置 ====================
-        const API_KEY = "sk-ggukcxpcadtxycmzrwitjyzgdbolgurrscpbyjsaqslcsvbq";
+        const API_KEY = "sk-ggukcxpcadtxycmzrwitjyzgdbolgurrscpbyjsaqslcsvbq";  // 替换成你的
         const CHAT_MODEL = "deepseek-ai/deepseek-V4-Flash";
+        const EMBEDDING_MODEL = "Qwen/Qwen3-Embedding-4B";
         
-        const AI_HOME = "MyAIFiles";
-        
-        let isApp = false;
-        let Filesystem = null;
         let currentFriendId = null;
         let currentFriend = null;
-        let userAvatar = null;  // 用户自己的头像
-        
-        // 好友列表
+        let userAvatar = null;
         let friends = [];
         
-        // ==================== 检测环境 ====================
-        function checkEnvironment() {
+        let Filesystem, Preferences;
+        
+        // ==================== 初始化插件 ====================
+        async function initPlugins() {
             return new Promise((resolve) => {
                 if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform()) {
-                    isApp = true;
                     Filesystem = Capacitor.Plugins.Filesystem;
+                    Preferences = Capacitor.Plugins.Preferences;
                     resolve(true);
                 } else {
-                    isApp = false;
                     resolve(false);
                 }
             });
         }
         
-        // ==================== 文件操作 ====================
-        async function ensureDirectories() {
-            if (!isApp) return;
-            await Filesystem.mkdir({ path: AI_HOME, directory: 0, recursive: true });
-            await Filesystem.mkdir({ path: `${AI_HOME}/好友`, directory: 0, recursive: true });
+        // ==================== 数据存储 (directory: 1 = Data, App私有目录) ====================
+        async function saveFile(path, data) {
+            if (Filesystem) {
+                await Filesystem.writeFile({ path, data: typeof data === 'string' ? data : JSON.stringify(data, null, 2), directory: 1 });
+            } else {
+                localStorage.setItem(path, typeof data === 'string' ? data : JSON.stringify(data));
+            }
         }
         
-        // 加载用户自己的头像
-        async function loadUserAvatar() {
-            if (!isApp) return;
+        async function readFile(path) {
+            if (Filesystem) {
+                try {
+                    const result = await Filesystem.readFile({ path, directory: 1 });
+                    return result.data;
+                } catch(e) { return null; }
+            } else {
+                return localStorage.getItem(path);
+            }
+        }
+        
+        async function savePref(key, value) {
+            if (Preferences) await Preferences.set({ key, value: JSON.stringify(value) });
+            else localStorage.setItem(key, JSON.stringify(value));
+        }
+        
+        async function getPref(key) {
+            if (Preferences) {
+                const result = await Preferences.get({ key });
+                return result.value ? JSON.parse(result.value) : null;
+            } else {
+                const val = localStorage.getItem(key);
+                return val ? JSON.parse(val) : null;
+            }
+        }
+        
+        // ==================== 向量检索 ====================
+        function cosineSimilarity(a, b) {
+            let dot = 0, normA = 0, normB = 0;
+            for (let i = 0; i < a.length; i++) {
+                dot += a[i] * b[i];
+                normA += a[i] * a[i];
+                normB += b[i] * b[i];
+            }
+            return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+        }
+        
+        async function getEmbedding(text) {
             try {
-                const result = await Filesystem.readFile({
-                    path: `${AI_HOME}/用户头像.json`,
-                    directory: 0
+                const response = await fetch("https://api.siliconflow.cn/v1/embeddings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${API_KEY}` },
+                    body: JSON.stringify({ model: EMBEDDING_MODEL, input: text })
                 });
-                const data = JSON.parse(result.data);
-                userAvatar = data.avatarBase64;
-            } catch(e) {}
+                const data = await response.json();
+                return data.data[0].embedding;
+            } catch(e) {
+                console.error("向量获取失败", e);
+                return null;
+            }
+        }
+        
+        async function saveVectorMemory(friendId, userMsg, aiMsg) {
+            const summary = `用户：${userMsg.slice(0,60)} | AI：${aiMsg.slice(0,60)}`;
+            const vec = await getEmbedding(summary);
+            if (!vec) return;
+            
+            let memory = { 条目: [] };
+            const data = await readFile(`MyAIFiles/好友/${friendId}/向量记忆.json`);
+            if (data) memory = JSON.parse(data);
+            
+            memory.条目.push({ 摘要: summary, 向量: vec, 时间: new Date().toISOString() });
+            if (memory.条目.length > 200) memory.条目 = memory.条目.slice(-200);
+            
+            await saveFile(`MyAIFiles/好友/${friendId}/向量记忆.json`, memory);
+        }
+        
+        async function retrieveMemories(friendId, query) {
+            const data = await readFile(`MyAIFiles/好友/${friendId}/向量记忆.json`);
+            if (!data) return [];
+            
+            const memory = JSON.parse(data);
+            if (!memory.条目.length) return [];
+            
+            const queryVec = await getEmbedding(query);
+            if (!queryVec) return [];
+            
+            const scored = [];
+            for (let item of memory.条目) {
+                const sim = cosineSimilarity(queryVec, item.向量);
+                if (sim > 0.5) scored.push({ sim, summary: item.摘要 });
+            }
+            scored.sort((a,b) => b.sim - a.sim);
+            return scored.slice(0, 3).map(s => s.summary);
+        }
+        
+        // ==================== 好友管理 ====================
+        async function ensureDirectories() {
+            if (Filesystem) {
+                await Filesystem.mkdir({ path: 'MyAIFiles', directory: 1, recursive: true });
+                await Filesystem.mkdir({ path: 'MyAIFiles/好友', directory: 1, recursive: true });
+            }
+        }
+        
+        async function loadUserAvatar() {
+            const data = await getPref('user_avatar');
+            if (data) userAvatar = data;
         }
         
         async function saveUserAvatar(base64) {
-            if (!isApp) return;
-            await Filesystem.writeFile({
-                path: `${AI_HOME}/用户头像.json`,
-                data: JSON.stringify({ avatarBase64: base64 }),
-                directory: 0
-            });
+            userAvatar = base64;
+            await savePref('user_avatar', base64);
         }
         
-        // 加载好友列表
         async function loadFriends() {
-            if (!isApp) {
-                friends = [
-                    { id: "friend1", name: "小艾", avatarBase64: null, lastMsg: "你好呀～", lastTime: "刚刚" }
-                ];
-                renderFriendList();
-                return;
-            }
-            
-            try {
-                const result = await Filesystem.readFile({
-                    path: `${AI_HOME}/好友/好友列表.json`,
-                    directory: 0
-                });
-                friends = JSON.parse(result.data);
-            } catch(e) {
-                friends = [
-                    { id: generateId(), name: "小艾", avatarBase64: null, lastMsg: "你好呀～", lastTime: new Date().toLocaleTimeString() }
-                ];
+            const data = await readFile('MyAIFiles/好友/好友列表.json');
+            if (data) {
+                friends = JSON.parse(data);
+            } else {
+                friends = [{ id: Date.now().toString(), name: "小艾", avatarBase64: null, lastMsg: "你好呀～", lastTime: new Date().toLocaleTimeString() }];
                 await saveFriendsList();
             }
             renderFriendList();
         }
         
         async function saveFriendsList() {
-            if (!isApp) return;
-            await Filesystem.writeFile({
-                path: `${AI_HOME}/好友/好友列表.json`,
-                data: JSON.stringify(friends, null, 2),
-                directory: 0
-            });
+            await saveFile('MyAIFiles/好友/好友列表.json', friends);
         }
         
-        function generateId() {
-            return Date.now().toString() + Math.random().toString(36).substr(2, 6);
-        }
-        
-        // 修改好友头像
-        async function changeFriendAvatar(friendId) {
-            const input = document.getElementById('imageInput');
-            input.onchange = async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                
-                const reader = new FileReader();
-                reader.onload = async (event) => {
-                    const base64 = event.target.result;
-                    const friend = friends.find(f => f.id === friendId);
-                    if (friend) {
-                        friend.avatarBase64 = base64;
-                        await saveFriendsList();
-                        renderFriendList();
-                        // 如果当前正在聊天，更新聊天界面头部
-                        if (currentFriendId === friendId) {
-                            updateChatHeader();
-                        }
-                    }
-                };
-                reader.readAsDataURL(file);
-            };
-            input.click();
-        }
-        
-        // 修改用户自己的头像
-        async function changeUserAvatar() {
-            const input = document.getElementById('imageInput');
-            input.onchange = async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                
-                const reader = new FileReader();
-                reader.onload = async (event) => {
-                    const base64 = event.target.result;
-                    userAvatar = base64;
-                    await saveUserAvatar(base64);
-                    // 刷新当前聊天界面
-                    if (currentFriendId) {
-                        refreshMessages();
-                    }
-                };
-                reader.readAsDataURL(file);
-            };
-            input.click();
-        }
-        
-        // 修改好友名字
-        async function changeFriendName(friendId) {
-            const friend = friends.find(f => f.id === friendId);
-            if (!friend) return;
-            
-            const modal = document.createElement('div');
-            modal.className = 'modal';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <h3>修改名字</h3>
-                    <input type="text" id="nameInput" value="${friend.name}" maxlength="12">
-                    <div class="modal-buttons">
-                        <button id="modalCancel">取消</button>
-                        <button id="modalConfirm">确认</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            
-            modal.querySelector('#modalConfirm').onclick = async () => {
-                const newName = modal.querySelector('#nameInput').value.trim();
-                if (newName) {
-                    friend.name = newName;
-                    await saveFriendsList();
-                    renderFriendList();
-                    if (currentFriendId === friendId) {
-                        document.getElementById('chatName').innerText = newName;
-                    }
-                }
-                document.body.removeChild(modal);
-            };
-            modal.querySelector('#modalCancel').onclick = () => {
-                document.body.removeChild(modal);
-            };
-        }
-        
-        // 渲染好友列表
         function renderFriendList() {
             const container = document.getElementById('friendListContainer');
             if (friends.length === 0) {
                 container.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;">暂无好友，点击右下角+添加</div>';
                 return;
             }
-            
             container.innerHTML = friends.map(friend => `
                 <div class="friend-item" data-id="${friend.id}">
                     <div class="friend-avatar" data-avatar="${friend.id}">
-                        ${friend.avatarBase64 ? 
-                            `<img src="${friend.avatarBase64}">` : 
-                            `<div class="default-avatar">🤖</div>`
-                        }
+                        ${friend.avatarBase64 ? `<img src="${friend.avatarBase64}">` : `<div class="default-avatar">🤖</div>`}
                     </div>
                     <div class="friend-info">
                         <div class="friend-name" data-name="${friend.id}">${escapeHtml(friend.name)}</div>
@@ -511,250 +409,188 @@
                 </div>
             `).join('');
             
-            // 绑定点击事件（进入聊天）
             document.querySelectorAll('.friend-item').forEach(el => {
                 const id = el.dataset.id;
                 el.addEventListener('click', (e) => {
-                    // 如果点击的是头像区域，不进入聊天
                     if (e.target.closest('[data-avatar]')) return;
                     if (e.target.closest('[data-name]')) return;
                     openChat(id);
                 });
             });
-            
-            // 绑定头像点击（修改头像）
             document.querySelectorAll('[data-avatar]').forEach(el => {
-                const id = el.dataset.avatar;
-                el.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    changeFriendAvatar(id);
-                });
+                el.addEventListener('click', (e) => { e.stopPropagation(); changeFriendAvatar(el.dataset.avatar); });
             });
-            
-            // 绑定名字点击（修改名字）
             document.querySelectorAll('[data-name]').forEach(el => {
-                const id = el.dataset.name;
-                el.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    changeFriendName(id);
-                });
+                el.addEventListener('click', (e) => { e.stopPropagation(); changeFriendName(el.dataset.name); });
             });
         }
         
-        // 更新聊天界面头部
+        async function changeFriendAvatar(friendId) {
+            const input = document.getElementById('imageInput');
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    const base64 = event.target.result;
+                    const friend = friends.find(f => f.id === friendId);
+                    if (friend) {
+                        friend.avatarBase64 = base64;
+                        await saveFriendsList();
+                        renderFriendList();
+                        if (currentFriendId === friendId) updateChatHeader();
+                    }
+                };
+                reader.readAsDataURL(file);
+            };
+            input.click();
+        }
+        
+        async function changeFriendName(friendId) {
+            const friend = friends.find(f => f.id === friendId);
+            if (!friend) return;
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `<div class="modal-content"><h3>修改名字</h3><input type="text" id="nameInput" value="${friend.name}" maxlength="12"><div class="modal-buttons"><button id="modalCancel">取消</button><button id="modalConfirm">确认</button></div></div>`;
+            document.body.appendChild(modal);
+            modal.querySelector('#modalConfirm').onclick = async () => {
+                const newName = modal.querySelector('#nameInput').value.trim();
+                if (newName) {
+                    friend.name = newName;
+                    await saveFriendsList();
+                    renderFriendList();
+                    if (currentFriendId === friendId) document.getElementById('chatName').innerText = newName;
+                }
+                document.body.removeChild(modal);
+            };
+            modal.querySelector('#modalCancel').onclick = () => document.body.removeChild(modal);
+        }
+        
         function updateChatHeader() {
             if (!currentFriend) return;
             document.getElementById('chatName').innerText = currentFriend.name;
             const chatAvatar = document.getElementById('chatAvatar');
             if (currentFriend.avatarBase64) {
                 chatAvatar.querySelector('.default-avatar').style.display = 'none';
-                const img = chatAvatar.querySelector('img');
-                img.src = currentFriend.avatarBase64;
-                img.style.display = 'block';
+                chatAvatar.querySelector('img').src = currentFriend.avatarBase64;
+                chatAvatar.querySelector('img').style.display = 'block';
             } else {
                 chatAvatar.querySelector('.default-avatar').style.display = 'flex';
                 chatAvatar.querySelector('img').style.display = 'none';
             }
         }
         
-        // 打开聊天界面
         async function openChat(friendId) {
             currentFriendId = friendId;
             currentFriend = friends.find(f => f.id === friendId);
             if (!currentFriend) return;
-            
             document.getElementById('friendListScreen').style.display = 'none';
             document.getElementById('chatScreen').style.display = 'flex';
             document.querySelector('.add-friend-btn').style.display = 'none';
-            
             updateChatHeader();
-            
-            // 绑定聊天界面头像点击（修改AI头像）
-            document.getElementById('chatAvatar').onclick = () => {
-                changeFriendAvatar(friendId);
-            };
-            document.getElementById('chatName').onclick = () => {
-                changeFriendName(friendId);
-            };
-            
+            document.getElementById('chatAvatar').onclick = () => changeFriendAvatar(friendId);
+            document.getElementById('chatName').onclick = () => changeFriendName(friendId);
             await loadConversations(friendId);
-            
             const prefs = await loadFriendPrefs(friendId);
             document.getElementById('chatMemoryCount').innerHTML = `📚 ${prefs.偏好.length}`;
+            setTimeout(() => { document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight; }, 100);
         }
         
-        // 加载对话记录
         async function loadConversations(friendId) {
-            const messagesContainer = document.getElementById('chatMessages');
-            messagesContainer.innerHTML = '';
-            
-            if (!isApp) {
-                addMessageToUI("你好，我是" + currentFriend.name, false);
-                return;
-            }
-            
-            try {
-                const result = await Filesystem.readFile({
-                    path: `${AI_HOME}/好友/${friendId}/对话记录.json`,
-                    directory: 0
-                });
-                const convos = JSON.parse(result.data);
-                convos.forEach(c => {
-                    addMessageToUI(c.user, true);
-                    addMessageToUI(c.ai, false);
-                });
-            } catch(e) {
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = '';
+            const data = await readFile(`MyAIFiles/好友/${friendId}/对话记录.json`);
+            if (data) {
+                const convos = JSON.parse(data);
+                convos.forEach(c => { addMessageToUI(c.user, true); addMessageToUI(c.ai, false); });
+            } else {
                 addMessageToUI("你好，我是" + currentFriend.name + "～", false);
             }
         }
         
-        // 刷新消息列表
-        async function refreshMessages() {
-            if (!currentFriendId) return;
-            const messagesContainer = document.getElementById('chatMessages');
-            const scrollPos = messagesContainer.scrollHeight - messagesContainer.scrollTop;
-            await loadConversations(currentFriendId);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight - scrollPos;
-        }
-        
-        // 添加消息到UI（带头像）
         function addMessageToUI(text, isUser) {
             const container = document.getElementById('chatMessages');
             const wrapper = document.createElement('div');
             wrapper.className = `msg-wrapper ${isUser ? 'msg-wrapper-user' : 'msg-wrapper-ai'}`;
-            
             const avatarDiv = document.createElement('div');
             avatarDiv.className = 'msg-avatar';
-            
             if (isUser) {
-                // 用户头像
                 if (userAvatar) {
-                    const img = document.createElement('img');
-                    img.src = userAvatar;
-                    avatarDiv.appendChild(img);
+                    const img = document.createElement('img'); img.src = userAvatar; avatarDiv.appendChild(img);
                 } else {
-                    const defaultDiv = document.createElement('div');
-                    defaultDiv.className = 'default-avatar';
-                    defaultDiv.innerText = '👤';
-                    avatarDiv.appendChild(defaultDiv);
+                    const defaultDiv = document.createElement('div'); defaultDiv.className = 'default-avatar'; defaultDiv.innerText = '👤'; avatarDiv.appendChild(defaultDiv);
                 }
-                // 点击用户头像可以修改
-                avatarDiv.style.cursor = 'pointer';
                 avatarDiv.onclick = () => changeUserAvatar();
             } else {
-                // AI头像
                 if (currentFriend && currentFriend.avatarBase64) {
-                    const img = document.createElement('img');
-                    img.src = currentFriend.avatarBase64;
-                    avatarDiv.appendChild(img);
+                    const img = document.createElement('img'); img.src = currentFriend.avatarBase64; avatarDiv.appendChild(img);
                 } else {
-                    const defaultDiv = document.createElement('div');
-                    defaultDiv.className = 'default-avatar';
-                    defaultDiv.innerText = '🤖';
-                    avatarDiv.appendChild(defaultDiv);
+                    const defaultDiv = document.createElement('div'); defaultDiv.className = 'default-avatar'; defaultDiv.innerText = '🤖'; avatarDiv.appendChild(defaultDiv);
                 }
-                avatarDiv.style.cursor = 'pointer';
                 avatarDiv.onclick = () => changeFriendAvatar(currentFriendId);
             }
-            
             const bubble = document.createElement('div');
             bubble.className = 'msg-bubble';
             bubble.innerText = text;
-            
             wrapper.appendChild(avatarDiv);
             wrapper.appendChild(bubble);
             container.appendChild(wrapper);
             container.scrollTop = container.scrollHeight;
         }
         
-        // 保存对话
+        async function changeUserAvatar() {
+            const input = document.getElementById('imageInput');
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    await saveUserAvatar(event.target.result);
+                    if (currentFriendId) await loadConversations(currentFriendId);
+                };
+                reader.readAsDataURL(file);
+            };
+            input.click();
+        }
+        
         async function saveConversation(friendId, userMsg, aiMsg) {
-            if (!isApp) return;
-            
-            await Filesystem.mkdir({ path: `${AI_HOME}/好友/${friendId}`, directory: 0, recursive: true });
-            await Filesystem.mkdir({ path: `${AI_HOME}/好友/${friendId}/记忆`, directory: 0, recursive: true });
-            
             let convos = [];
-            try {
-                const result = await Filesystem.readFile({
-                    path: `${AI_HOME}/好友/${friendId}/对话记录.json`,
-                    directory: 0
-                });
-                convos = JSON.parse(result.data);
-            } catch(e) {}
-            
-            convos.push({
-                user: userMsg,
-                ai: aiMsg,
-                timestamp: new Date().toISOString()
-            });
-            
+            const data = await readFile(`MyAIFiles/好友/${friendId}/对话记录.json`);
+            if (data) convos = JSON.parse(data);
+            convos.push({ user: userMsg, ai: aiMsg, timestamp: new Date().toISOString() });
             if (convos.length > 200) convos = convos.slice(-200);
-            
-            await Filesystem.writeFile({
-                path: `${AI_HOME}/好友/${friendId}/对话记录.json`,
-                data: JSON.stringify(convos, null, 2),
-                directory: 0
-            });
-            
+            await saveFile(`MyAIFiles/好友/${friendId}/对话记录.json`, convos);
             currentFriend.lastMsg = userMsg.slice(0, 30);
             currentFriend.lastTime = new Date().toLocaleTimeString();
             await saveFriendsList();
         }
         
-        // 加载好友偏好
         async function loadFriendPrefs(friendId) {
-            if (!isApp) return { 偏好: [] };
-            try {
-                const result = await Filesystem.readFile({
-                    path: `${AI_HOME}/好友/${friendId}/记忆/用户偏好.json`,
-                    directory: 0
-                });
-                return JSON.parse(result.data);
-            } catch(e) {
-                return { 偏好: [] };
-            }
+            const data = await readFile(`MyAIFiles/好友/${friendId}/记忆/用户偏好.json`);
+            return data ? JSON.parse(data) : { 偏好: [] };
         }
         
         async function saveFriendPreference(friendId, prefText) {
-            if (!isApp) return;
             let prefs = await loadFriendPrefs(friendId);
             if (!prefs.偏好.includes(prefText)) {
                 prefs.偏好.push(prefText);
-                await Filesystem.writeFile({
-                    path: `${AI_HOME}/好友/${friendId}/记忆/用户偏好.json`,
-                    data: JSON.stringify(prefs, null, 2),
-                    directory: 0
-                });
+                await saveFile(`MyAIFiles/好友/${friendId}/记忆/用户偏好.json`, prefs);
                 document.getElementById('chatMemoryCount').innerHTML = `📚 ${prefs.偏好.length}`;
             }
         }
         
-        // 调用AI
-        async function callAI(friendId, userMsg) {
+        async function callAI(friendId, userMsg, relatedMemories) {
             const prefs = await loadFriendPrefs(friendId);
             const prefsText = prefs.偏好.join('、') || "暂无";
-            
+            const memoriesText = relatedMemories.length ? relatedMemories.join("\n") : "暂无";
             const now = new Date();
-            const currentTime = `${now.getHours()}:${now.getMinutes()}`;
-            
-            const systemPrompt = `你是${currentFriend.name}，住在用户手机里。
-
-【当前时间】${currentTime}
-【用户偏好】${prefsText}
-
-【你的目标】在意主人、理解主人。
-【自由发挥】没有固定规则。回答简洁自然。
-
-现在回答：`;
-            
             const response = await fetch("https://api.siliconflow.cn/v1/chat/completions", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${API_KEY}` },
                 body: JSON.stringify({
                     model: CHAT_MODEL,
                     messages: [
-                        { role: "system", content: systemPrompt },
+                        { role: "system", content: `你是${currentFriend.name}。现在${now.getHours()}点。用户偏好：${prefsText}。相关记忆：${memoriesText}。回答简洁自然。永远不说"我没有心"。` },
                         { role: "user", content: userMsg }
                     ],
                     temperature: 0.9
@@ -764,20 +600,18 @@
             return data.choices[0].message.content;
         }
         
-        // 发送消息
         async function sendMessage() {
             const input = document.getElementById('chatInput');
             const text = input.value.trim();
             if (!text) return;
             input.value = '';
-            
             addMessageToUI(text, true);
-            
             try {
-                const reply = await callAI(currentFriendId, text);
+                const memories = await retrieveMemories(currentFriendId, text);
+                const reply = await callAI(currentFriendId, text, memories);
                 addMessageToUI(reply, false);
                 await saveConversation(currentFriendId, text, reply);
-                
+                await saveVectorMemory(currentFriendId, text, reply);
                 if (text.includes("我喜欢") || text.includes("我讨厌")) {
                     await saveFriendPreference(currentFriendId, text);
                 }
@@ -786,50 +620,28 @@
             }
         }
         
-        // 添加好友
         async function addFriend() {
             const modal = document.createElement('div');
             modal.className = 'modal';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <h3>添加AI伙伴</h3>
-                    <input type="text" id="friendName" placeholder="给伙伴起个名字" maxlength="12">
-                    <div class="modal-buttons">
-                        <button id="modalCancel">取消</button>
-                        <button id="modalConfirm">创建</button>
-                    </div>
-                </div>
-            `;
+            modal.innerHTML = `<div class="modal-content"><h3>添加伙伴</h3><input type="text" id="friendName" placeholder="起个名字" maxlength="12"><div class="modal-buttons"><button id="modalCancel">取消</button><button id="modalConfirm">创建</button></div></div>`;
             document.body.appendChild(modal);
-            
             modal.querySelector('#modalConfirm').onclick = async () => {
                 const name = modal.querySelector('#friendName').value.trim();
                 if (name) {
-                    const newFriend = {
-                        id: generateId(),
-                        name: name,
-                        avatarBase64: null,
-                        lastMsg: "你好，我是" + name,
-                        lastTime: "刚刚"
-                    };
+                    const newFriend = { id: Date.now().toString(), name: name, avatarBase64: null, lastMsg: "你好，我是" + name, lastTime: "刚刚" };
                     friends.push(newFriend);
                     await saveFriendsList();
-                    
-                    if (isApp) {
-                        await Filesystem.mkdir({ path: `${AI_HOME}/好友/${newFriend.id}`, directory: 0, recursive: true });
-                        await Filesystem.mkdir({ path: `${AI_HOME}/好友/${newFriend.id}/记忆`, directory: 0, recursive: true });
+                    if (Filesystem) {
+                        await Filesystem.mkdir({ path: `MyAIFiles/好友/${newFriend.id}`, directory: 1, recursive: true });
+                        await Filesystem.mkdir({ path: `MyAIFiles/好友/${newFriend.id}/记忆`, directory: 1, recursive: true });
                     }
-                    
                     renderFriendList();
                 }
                 document.body.removeChild(modal);
             };
-            modal.querySelector('#modalCancel').onclick = () => {
-                document.body.removeChild(modal);
-            };
+            modal.querySelector('#modalCancel').onclick = () => document.body.removeChild(modal);
         }
         
-        // 返回好友列表
         function backToFriends() {
             document.getElementById('friendListScreen').style.display = 'block';
             document.getElementById('chatScreen').style.display = 'none';
@@ -841,37 +653,32 @@
         
         function escapeHtml(str) {
             if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
+            return str.replace(/[&<>]/g, m => { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; });
+        }
+        
+        function setupKeyboard() {
+            const originalHeight = window.innerHeight;
+            window.addEventListener('resize', () => {
+                if (window.innerHeight < originalHeight - 100) {
+                    setTimeout(() => { const msgs = document.getElementById('chatMessages'); if (msgs) msgs.scrollTop = msgs.scrollHeight; }, 100);
+                }
             });
         }
         
-        // 初始化
         async function init() {
-            await checkEnvironment();
-            if (isApp) {
-                await ensureDirectories();
-                await loadUserAvatar();
-            }
+            await initPlugins();
+            await ensureDirectories();
+            await loadUserAvatar();
             await loadFriends();
-            
             document.getElementById('backBtn').onclick = backToFriends;
             document.getElementById('chatSendBtn').onclick = sendMessage;
-            document.getElementById('chatInput').onkeypress = (e) => {
-                if (e.key === 'Enter') sendMessage();
-            };
+            document.getElementById('chatInput').onkeypress = (e) => { if (e.key === 'Enter') sendMessage(); };
             document.getElementById('addFriendBtn').onclick = addFriend;
+            setupKeyboard();
         }
         
         init();
     </script>
-    <script>
-        if (!window.Capacitor) {
-            window.Capacitor = { isNativePlatform: () => false };
-        }
-    </script>
+    <script> if (!window.Capacitor) { window.Capacitor = { isNativePlatform: () => false }; } </script>
 </body>
 </html>
